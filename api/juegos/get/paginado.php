@@ -22,7 +22,7 @@ try {
     }
 
     // Parámetros de paginación (pueden venir desde la solicitud GET)
-    $limit = isset($_GET['limit']) ? max((int)$_GET['limit'], 1) : 10; // Límite de resultados (default: 10)
+    $limit = isset($_GET['limit']) ? max((int)$_GET['limit'], 1) : 12; // Límite de resultados (default: 10)
     $skip = isset($_GET['skip']) ? max((int)$_GET['skip'], 0) : 0; // Saltar registros (default: 0)
 
     // Validar los parámetros de paginación

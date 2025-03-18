@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/../../../config/db.php';
+require_once __DIR__ . '/../../../config/cors.php'; // Configuración de CORS
+require_once __DIR__ . '../../../../config/db.php'; 
 header('Content-Type: application/json');
 
 // Función para manejar errores
