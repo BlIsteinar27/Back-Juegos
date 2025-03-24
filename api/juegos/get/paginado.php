@@ -22,7 +22,7 @@ try {
     }
 
     // Parámetros de paginación (pueden venir desde la solicitud GET)
-    $limit = isset($_GET['limit']) ? max((int)$_GET['limit'], 1) : 12; // Límite de resultados (default: 10)
+    $limit = isset($_GET['limit']) ? max((int)$_GET['limit'], 1) : 12; // Límite de resultados (default: 12)
     $skip = isset($_GET['skip']) ? max((int)$_GET['skip'], 0) : 0; // Saltar registros (default: 0)
 
     // Validar los parámetros de paginación
@@ -36,18 +36,20 @@ try {
     $total = $totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
 
     // Consulta SQL con paginación y selección específica de columnas
-    $query = "SELECT a.idjuego, 
-                a.idestatus, 
-                a.nombre as nombre, 
-                a.descripcion, 
-                a.fechapublicacion, 
-                a.precio, 
-                a.imagen, 
-                b.idgenero, 
-                b.nombre as genero, 
-                b.descripcion as dgenero 
-                FROM juegos as a 
-                INNER JOIN generos as b on a.idgenero=b.idgenero
+    $query = "SELECT a.idjuego,
+                a.idestatus,
+                a.nombre as nombre,
+                c.nombre as estatusjuego,
+                a.descripcion,
+                a.fechapublicacion,
+                a.precio,
+                a.imagen,
+                b.idgenero,
+                b.nombre as genero,
+                b.descripcion as dgenero
+                FROM juegos as a
+                INNER JOIN generos as b on a.idgenero = b.idgenero
+                INNER JOIN estatus_juego as c on a.idestatus = c.idestatus
                 LIMIT :limit OFFSET :skip";
 
     // Preparar la consulta

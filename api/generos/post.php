@@ -1,5 +1,7 @@
 <?php
+require_once __DIR__ . '/../../../config/cors.php';
 require_once __DIR__ . '/../../../config/db.php';
+
 header('Content-Type: application/json');
 
 // Obtener datos del cuerpo de la solicitud
