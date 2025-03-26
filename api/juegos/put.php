@@ -4,14 +4,8 @@ require_once __DIR__ . '/../../config/db.php';
 
 header('Content-Type: application/json');
 
-// Obtener datos del cuerpo de la solicitud
-$data = json_decode(file_get_contents('php://input'), true);
-
-// Log de datos recibidos
-error_log(print_r($data, true));
-
 // Obtener el ID del juego a actualizar
-$idjuego = isset($data['idjuego']) ? (int)$data['idjuego'] : null;
+$idjuego = isset($_POST['idjuego']) ? (int)$_POST['idjuego'] : null;
 
 // Validar que el ID del juego esté presente
 if (!$idjuego) {
@@ -21,16 +15,23 @@ if (!$idjuego) {
 }
 
 // Asignar valores (permitir NULL si no se proporcionan)
-$nombre = isset($data['nombre']) ? trim($data['nombre']) : null;
-$descripcion = isset($data['descripcion']) ? trim($data['descripcion']) : null;
-$idestatus = isset($data['idestatus']) ? (int)$data['idestatus'] : null;
-$idgenero = isset($data['idgenero']) ? (int)$data['idgenero'] : null;
-$fechapublicacion = isset($data['fechapublicacion']) ? $data['fechapublicacion'] : null;
-$precio = isset($data['precio']) ? (float)$data['precio'] : null;
-$valoracion = isset($data['valoracion']) ? (int)$data['valoracion'] : null;
+$nombre = isset($_POST['nombre']) ? trim($_POST['nombre']) : null;
+$descripcion = isset($_POST['descripcion']) ? trim($_POST['descripcion']) : null;
+$idestatus = isset($_POST['idestatus']) ? (int)$_POST['idestatus'] : null;
+$idgenero = isset($_POST['idgenero']) ? (int)$_POST['idgenero'] : null;
+$fechapublicacion = isset($_POST['fechapublicacion']) ? $_POST['fechapublicacion'] : null;
+$precio = isset($_POST['precio']) ? (float)$_POST['precio'] : null;
+$valoracion = isset($_POST['valoracion']) ? (int)$_POST['valoracion'] : null;
+
+// Consultar la imagen actual del juego
+$stmt = $pdo->prepare("SELECT imagen FROM juegos WHERE idjuego = :idjuego");
+$stmt->execute(['idjuego' => $idjuego]);
+$result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$imagenActual = $result['imagen'] ?? null; // Imagen actual del juego
+$nuevaImagen = null; // Nueva imagen (si se proporciona)
 
 // Manejo de la imagen (opcional)
-$imagen = null;
 if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] == 0) {
     $imagen = $_FILES['imagen'];
     $nombreImagen = $imagen['name'];
@@ -43,17 +44,13 @@ if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] == 0) {
         $ruta = $directorio . $nombreArchivo;
 
         // Eliminar la imagen anterior si existe
-        $stmt = $pdo->prepare("SELECT imagen FROM juegos WHERE idjuego = :idjuego");
-        $stmt->execute(['idjuego' => $idjuego]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($result && file_exists($directorio . $result['imagen'])) {
-            unlink($directorio . $result['imagen']);
+        if ($imagenActual && file_exists($directorio . $imagenActual)) {
+            unlink($directorio . $imagenActual);
         }
 
         // Mover la nueva imagen al directorio
         if (move_uploaded_file($imagen['tmp_name'], $ruta)) {
-            $imagen = $nombreArchivo;
+            $nuevaImagen = $nombreArchivo;
         } else {
             http_response_code(500);
             echo json_encode(['error' => 'Error al subir la imagen']);
@@ -66,12 +63,21 @@ if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] == 0) {
     }
 }
 
+// Determinar qué imagen usar
+$imagenFinal = $nuevaImagen ?? $imagenActual; // Usa la nueva imagen si existe, de lo contrario, mantiene la actual
+
 try {
     // Preparar la consulta SQL
-    $stmt = $pdo->prepare("UPDATE juegos SET idestatus = :idestatus, idgenero = :idgenero, nombre = :nombre, descripcion = :descripcion, fechapublicacion = :fechapublicacion, precio = :precio, valoracion = :valoracion, imagen = :imagen WHERE idjuego = :idjuego");
-
-    // Log de la consulta SQL
-    error_log("Consulta SQL: " . $stmt->queryString);
+    $stmt = $pdo->prepare("UPDATE juegos SET 
+        idestatus = :idestatus, 
+        idgenero = :idgenero, 
+        nombre = :nombre, 
+        descripcion = :descripcion, 
+        fechapublicacion = :fechapublicacion, 
+        precio = :precio, 
+        valoracion = :valoracion, 
+        imagen = :imagen 
+        WHERE idjuego = :idjuego");
 
     // Ejecutar la consulta con los valores proporcionados
     $stmt->execute([
@@ -82,7 +88,7 @@ try {
         'fechapublicacion' => $fechapublicacion,
         'precio' => $precio,
         'valoracion' => $valoracion,
-        'imagen' => $imagen,
+        'imagen' => $imagenFinal, // Usa la imagen final (nueva o existente)
         'idjuego' => $idjuego
     ]);
 

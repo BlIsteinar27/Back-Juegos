@@ -36,21 +36,26 @@ try {
     $total = $totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
 
     // Consulta SQL con paginación y selección específica de columnas
-    $query = "SELECT a.idjuego,
-                a.idestatus,
-                a.nombre as nombre,
-                c.nombre as estatusjuego,
-                a.descripcion,
-                a.fechapublicacion,
-                a.precio,
-                a.imagen,
-                b.idgenero,
-                b.nombre as genero,
-                b.descripcion as dgenero
-                FROM juegos as a
-                INNER JOIN generos as b on a.idgenero = b.idgenero
-                INNER JOIN estatus_juego as c on a.idestatus = c.idestatus
-                LIMIT :limit OFFSET :skip";
+    $query = "SELECT
+    a.idjuego,
+    a.idestatus,
+    a.nombre AS nombre_juego,
+    c.nombre AS estatus_juego,
+    a.descripcion AS descripcion_juego,
+    a.fechapublicacion,
+    a.valoracion,
+    a.precio,
+    a.imagen,
+    b.idgenero,
+    b.nombre AS nombre_genero,
+    b.descripcion AS descripcion_genero
+FROM
+    juegos AS a
+INNER JOIN
+    generos AS b ON a.idgenero = b.idgenero
+INNER JOIN
+    estatus_juego AS c ON a.idestatus = c.idestatus
+LIMIT :limit OFFSET :skip";
 
     // Preparar la consulta
     $stmt = $pdo->prepare($query);
